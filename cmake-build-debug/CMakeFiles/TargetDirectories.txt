@@ -1,3 +1,3 @@
-/Users/yelyzaveta/CLionProjects/oop_airflight/cmake-build-debug/CMakeFiles/oop_airflight.dir
-/Users/yelyzaveta/CLionProjects/oop_airflight/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/yelyzaveta/CLionProjects/oop_airflight/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/yelyzaveta/CLionProjects/oop_airflight/oop_airfligth/cmake-build-debug/CMakeFiles/oop_airflight.dir
+/Users/yelyzaveta/CLionProjects/oop_airflight/oop_airfligth/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/yelyzaveta/CLionProjects/oop_airflight/oop_airfligth/cmake-build-debug/CMakeFiles/rebuild_cache.dir

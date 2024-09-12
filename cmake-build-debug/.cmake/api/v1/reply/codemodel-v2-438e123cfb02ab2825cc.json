@@ -49,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/Users/yelyzaveta/CLionProjects/oop_airflight/cmake-build-debug",
-		"source" : "/Users/yelyzaveta/CLionProjects/oop_airflight"
+		"build" : "/Users/yelyzaveta/CLionProjects/oop_airflight/oop_airfligth/cmake-build-debug",
+		"source" : "/Users/yelyzaveta/CLionProjects/oop_airflight/oop_airfligth"
 	},
 	"version" : 
 	{
