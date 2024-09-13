@@ -204,6 +204,140 @@ public:
     }
 };
 
+class Program {
+private:
+    vector<Airplane> airplanes;
+    vector<Passenger> passengers;
+    vector<Ticket> tickets;
+
+public:
+    Program(const string& configFile) {
+        ConfigReader configReader;
+        airplanes = configReader.loadConfig(configFile);
+    }
+
+    // Find a passenger by name
+    Passenger* findPassenger(const string& name) {
+        for (auto& passenger : passengers) {
+            if (passenger.name == name) return &passenger;
+        }
+        return nullptr;
+    }
+
+    // Add a new passenger
+    void addPassenger(const string& name, double money) {
+        passengers.push_back(Passenger(name, money));
+    }
+
+    // Book a ticket for a passenger
+    void bookTicket(const string& flightNumber, const string& date, const string& seatNumber, char seatLetter, const string& passengerName) {
+        for (auto& airplane : airplanes) {
+            if (airplane.flightNumber == flightNumber && airplane.date == date) {
+                if (airplane.bookSeat(stoi(seatNumber), seatLetter)) {
+                    Passenger* passenger = findPassenger(passengerName);
+                    if (!passenger) {
+                        passengers.push_back(Passenger(passengerName));
+                        passenger = &passengers.back();
+                    }
+
+                    int ticketID = rand(); // Generate a random ticket ID
+                    auto seat = airplane.seats.find(to_string(stoi(seatNumber)) + seatLetter)->second;
+                    Ticket ticket(ticketID, passengerName, flightNumber, date, seat);
+                    passenger->addTicket(ticket);
+                    tickets.push_back(ticket);
+
+                    cout << "Ticket booked successfully. Ticket ID: " << ticketID << endl;
+                } else {
+                    cout << "Seat is unavailable or invalid.\n";
+                }
+                return;
+            }
+        }
+        cout << "Flight not found.\n";
+    }
+
+
+    void checkAvailability(const string& flightNumber, const string& date) {
+        for (const auto& airplane : airplanes) {
+            if (airplane.flightNumber == flightNumber && airplane.date == date) {
+                cout << "Available seats for flight " << flightNumber << " on " << date << ":\n";
+                airplane.displayAvailableSeats();
+                return;
+            }
+        }
+        cout << "Flight not found.\n";
+    }
+
+    void returnTicket(int ticketID) {
+        Ticket foundTicket;
+        Passenger* ticketOwner = nullptr;
+
+        // Find the passenger who owns the ticket
+        for (auto& passenger : passengers) {
+            if (passenger.findTicket(ticketID, foundTicket)) {
+                ticketOwner = &passenger;
+                break;
+            }
+        }
+
+
+        if (ticketOwner) {
+            // Find the corresponding airplane and return the seat
+            for (auto& airplane : airplanes) {
+                if (airplane.flightNumber == foundTicket.flightNumber && airplane.date == foundTicket.flightDate) {
+                    airplane.returnSeat(foundTicket.seat.number, foundTicket.seat.letter);  // Return the seat in the airplane
+                    ticketOwner->returnTicket(ticketID);           // Remove the ticket from the passenger
+                    ticketOwner->refundMoney(foundTicket.seat.price);   // Refund the ticket price to the passenger
+                    cout << "Ticket returned successfully. Refund issued for $" << foundTicket.seat.price << endl;
+                    return;
+                }
+            }
+        } else {
+            cout << "Ticket not found.\n";
+        }
+    }
+
+    // View all tickets for a passenger
+    void viewBookedTickets(const string& passengerName) {
+        Passenger* passenger = findPassenger(passengerName);
+        if (passenger) {
+            passenger->showTickets();
+        } else {
+            cout << "Passenger not found!\n";
+        }
+    }
+
+    void viewTicket(int ticketID) {
+        for (const auto& ticket : tickets) {
+            if (ticket.ticketID == ticketID) {
+                ticket.viewTicket();
+                return;
+            }
+        }
+        cout << "Ticket ID not found.\n";
+    }
+
+    void viewByUsername(const string& username) {
+        Passenger* passenger = findPassenger(username);
+        if (passenger) {
+            passenger->showTickets();
+        } else {
+            cout << "Passenger not found.\n";
+        }
+    }
+
+    void viewByFlight(const string& date, const string& flightNumber) {
+        for (const auto& airplane : airplanes) {
+            if (airplane.flightNumber == flightNumber && airplane.date == date) {
+                cout << "Available tickets for flight " << flightNumber << " on " << date << ":\n";
+                airplane.displayAvailableSeats();
+                return;
+            }
+        }
+        cout << "Flight not found.\n";
+    }
+};
+
 class InputReader {
     public:
         void processInput(const string& input, Program& program) {
