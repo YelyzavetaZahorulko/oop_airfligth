@@ -4,6 +4,9 @@
 #include <string>
 #include <sstream>
 #include <map>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdexcept>
 
 using namespace std;
 
@@ -159,22 +162,91 @@ public:
 
 };
 
+class File {
+public:
+    // Constructor opens the file
+    File(const char* filename, int flags) {
+        fileDescriptor = open(filename, flags);
+        if (fileDescriptor == -1) {
+            throw std::runtime_error("Failed to open file");
+        }
+    }
+
+    // Destructor closes the file
+    ~File() {
+        if (fileDescriptor != -1) {
+            close(fileDescriptor);
+        }
+    }
+
+    // Disable copy semantics to avoid double-close
+    File(const File&) = delete;
+    File& operator=(const File&) = delete;
+
+    // Enable move semantics for transferring ownership
+    File(File&& other) noexcept : fileDescriptor(other.fileDescriptor) {
+        other.fileDescriptor = -1; // Nullify the moved-from object's file descriptor
+    }
+
+    File& operator=(File&& other) noexcept {
+        if (this != &other) {
+            if (fileDescriptor != -1) {
+                close(fileDescriptor);
+            }
+            fileDescriptor = other.fileDescriptor;
+            other.fileDescriptor = -1;
+        }
+        return *this;
+    }
+
+    // Reading from the file
+    ssize_t read(void* buffer, size_t size) {
+        return ::read(fileDescriptor, buffer, size);
+    }
+
+    // Writing to the file
+    ssize_t write(const void* buffer, size_t size) {
+        return ::write(fileDescriptor, buffer, size);
+    }
+
+    // File descriptor accessor
+    int getFileDescriptor() const {
+        return fileDescriptor;
+    }
+
+private:
+    int fileDescriptor;
+};
+
 class ConfigReader {
 public:
     vector<Airplane> loadConfig(const string& configFile) {
         vector<Airplane> airplanes;
-        ifstream file(configFile);
-        if (!file.is_open()) {
-            cout << "Unable to open configuration file." << endl;
-            return airplanes;
+        File file(configFile.c_str(), O_RDONLY);
+        char buffer[4096];
+        ssize_t bytesRead;
+        string fileContent;
+        // ifstream file(configFile);
+        // if (!file.is_open()) {
+        //     cout << "Unable to open configuration file." << endl;
+        //     return airplanes;
+        // }
+
+        while ((bytesRead = file.read(buffer, sizeof(buffer))) > 0) {
+            fileContent.append(buffer, bytesRead);
         }
 
+        // Handle case where file couldn't be read
+        if (bytesRead == -1) {
+            throw std::runtime_error("Error reading file");
+        }
+        stringstream ss(fileContent);
         string line;
-        while (getline(file, line)) {
-            stringstream ss(line);
+        while (getline(ss, line)) {
+            stringstream lineStream(line);
             string date, flightNumber;
             int seatsPerRow;
-            ss >> date >> flightNumber >> seatsPerRow;
+            lineStream >> date >> flightNumber >> seatsPerRow;
 
             vector<Seat> seats;
             int seatNumber = 1;
@@ -182,9 +254,9 @@ public:
             string priceStr;
             double price;
 
-            while (ss >> rowStart >> rowEnd >> priceStr) {
+            while (lineStream >> rowStart >> rowEnd >> priceStr) {
                 char dash;
-                ss >> dash >> rowEnd >> priceStr;
+                lineStream >> dash >> rowEnd >> priceStr;
 
                 priceStr.erase(remove(priceStr.begin(), priceStr.end(), '$'), priceStr.end());
                 price = stod(priceStr);
@@ -391,7 +463,7 @@ class InputReader {
         }
     };
 
-    // Main function to interact with the system
+
 int main() {
     Program program("/Users/yelyzaveta/CLionProjects/oop_airflight/oop_airfligth/config.txt");
     InputReader inputReader;
