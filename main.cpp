@@ -240,7 +240,7 @@ public:
         if (bytesRead == -1) {
             throw std::runtime_error("Error reading file");
         }
-        stringstream ss(fileContent);
+        istringstream ss(fileContent);
         string line;
         while (getline(ss, line)) {
             stringstream lineStream(line);
@@ -249,12 +249,11 @@ public:
             lineStream >> date >> flightNumber >> seatsPerRow;
 
             vector<Seat> seats;
-            int seatNumber = 1;
             int rowStart, rowEnd;
             string priceStr;
             double price;
 
-            while (lineStream >> rowStart >> rowEnd >> priceStr) {
+            while (lineStream >> rowStart ) {
                 char dash;
                 lineStream >> dash >> rowEnd >> priceStr;
 
@@ -263,7 +262,7 @@ public:
 
                 for (int row = rowStart; row <= rowEnd; ++row) {
                     for (char letter = 'A'; letter < 'A' + seatsPerRow; ++letter) {
-                        seats.push_back(Seat(seatNumber++, letter, row, price));
+                        seats.push_back(Seat(row, letter, row, price));
                     }
                 }
             }
